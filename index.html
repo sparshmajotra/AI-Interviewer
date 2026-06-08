@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Interview Copilot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #080c14;
+      --bg2: #0d1220;
+      --bg3: #111827;
+      --card: #0f1729;
+      --border: #1e2d4a;
+      --border2: #243354;
+      --accent: #3b82f6;
+      --accent2: #60a5fa;
+      --accent3: #93c5fd;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --text: #e2e8f0;
+      --text2: #94a3b8;
+      --text3: #64748b;
+      --glow: 0 0 40px rgba(59,130,246,0.15);
+      --glow2: 0 0 80px rgba(59,130,246,0.08);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── GRID BACKGROUND ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── AMBIENT GLOW ── */
+    .ambient {
+      position: fixed;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      transition: all 2s ease;
+    }
+    .ambient-1 { top: -200px; left: -100px; }
+    .ambient-2 { bottom: -200px; right: -100px; background: radial-gradient(circle, rgba(96,165,250,0.04) 0%, transparent 70%); }
+
+    /* ── LAYOUT ── */
+    .page { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
+
+    /* ── HEADER ── */
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+      animation: fadeDown 0.8s ease both;
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .logo-icon {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 0 30px rgba(59,130,246,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+      position: relative;
+    }
+
+    .logo-icon::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 15px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+      pointer-events: none;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #e2e8f0 0%, #93c5fd 50%, #60a5fa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+
+    .header p {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--text3);
+      letter-spacing: 0.05em;
+    }
+
+    .status-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--green);
+      margin-top: 14px;
+    }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(59,130,246,0.4), transparent);
+    }
+
+    /* ── UPLOAD SECTION ── */
+    .upload-zone {
+      border: 2px dashed var(--border2);
+      border-radius: 16px;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      background: rgba(59,130,246,0.02);
+    }
+
+    .upload-zone:hover {
+      border-color: var(--accent);
+      background: rgba(59,130,246,0.06);
+      transform: translateY(-2px);
+      box-shadow: var(--glow);
+    }
+
+    .upload-zone.dragover {
+      border-color: var(--accent2);
+      background: rgba(59,130,246,0.1);
+    }
+
+    .upload-icon-wrap {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(59,130,246,0.05));
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 32px;
+      transition: all 0.3s ease;
+    }
+
+    .upload-zone:hover .upload-icon-wrap {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(59,130,246,0.2);
+    }
+
+    .upload-zone h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .upload-zone p {
+      font-size: 13px;
+      color: var(--text3);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .upload-zone input { display: none; }
+
+    .file-selected {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .file-selected.show { display: flex; }
+    .file-selected-icon { font-size: 22px; }
+    .file-selected-name { font-size: 14px; font-weight: 600; color: var(--green); }
+    .file-selected-size { font-size: 12px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+
+    /* ── BUTTON ── */
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      margin-top: 16px;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+      color: white;
+      box-shadow: 0 4px 20px rgba(59,130,246,0.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(59,130,246,0.4);
+    }
+
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: var(--border2);
+    }
+
+    /* ── CAR DRIFT LOADER ── */
+    .loader-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(8,12,20,0.92);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    .loader-overlay.show { display: flex; }
+
+    .track {
+      width: 320px;
+      height: 80px;
+      position: relative;
+    }
+
+    .track-line {
+      position: absolute;
+      bottom: 20px;
+      left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--border2), transparent);
+      border-radius: 2px;
+    }
+
+    .track-line::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0;
+      left: 0;
+      width: 60px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: trackLight 1.5s ease-in-out infinite;
+    }
+
+    .car {
+      position: absolute;
+      bottom: 22px;
+      font-size: 28px;
+      animation: drift 1.8s ease-in-out infinite;
+      filter: drop-shadow(0 0 8px rgba(59,130,246,0.6));
+    }
+
+    .smoke {
+      position: absolute;
+      bottom: 30px;
+      font-size: 12px;
+      opacity: 0;
+      animation: smokeOut 1.8s ease-in-out infinite;
+    }
+
+    .smoke-1 { animation-delay: 0s; }
+    .smoke-2 { animation-delay: 0.2s; }
+    .smoke-3 { animation-delay: 0.4s; }
+
+    @keyframes drift {
+      0%   { left: -40px; transform: scaleX(1) rotate(-2deg); }
+      20%  { transform: scaleX(1) rotate(3deg); }
+      40%  { transform: scaleX(1) rotate(-4deg); }
+      60%  { transform: scaleX(1) rotate(2deg); }
+      80%  { transform: scaleX(1) rotate(-1deg); }
+      100% { left: 340px; transform: scaleX(1) rotate(0deg); }
+    }
+
+    @keyframes smokeOut {
+      0%   { opacity: 0.8; transform: translateY(0) translateX(0) scale(0.5); }
+      100% { opacity: 0; transform: translateY(-20px) translateX(-15px) scale(2); }
+    }
+
+    @keyframes trackLight {
+      0%   { left: -60px; }
+      100% { left: 100%; }
+    }
+
+    .loader-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text2);
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.05em;
+    }
+
+    .loader-subtext {
+      font-size: 13px;
+      color: var(--text3);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .loader-dots span {
+      animation: blink 1.2s infinite;
+      display: inline-block;
+    }
+    .loader-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loader-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes blink {
+      0%, 80% { opacity: 0; }
+      40% { opacity: 1; }
+    }
+
+    /* ── PROGRESS BAR ── */
+    .progress-wrap {
+      margin-bottom: 24px;
+    }
+
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .progress-label {
+      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text3);
+    }
+
+    .progress-label span { color: var(--accent2); font-weight: 500; }
+
+    .progress-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: visible;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #1d4ed8, #60a5fa);
+      border-radius: 4px;
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+      box-shadow: 0 0 10px rgba(59,130,246,0.5);
+    }
+
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      right: -4px; top: -4px;
+      width: 12px; height: 12px;
+      background: var(--accent2);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent2);
+    }
+
+    .progress-dots {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .pdot {
+      width: 28px; height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      transition: all 0.3s ease;
+    }
+
+    .pdot.active { background: var(--accent); box-shadow: 0 0 8px rgba(59,130,246,0.5); }
+    .pdot.done { background: var(--green); box-shadow: 0 0 6px rgba(34,197,94,0.3); }
+
+    /* ── QUESTION BOX ── */
+    .q-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent2);
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .q-number::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .question-text {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.5;
+      margin-bottom: 24px;
+      padding: 20px;
+      background: rgba(59,130,246,0.04);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 12px 12px 0;
+      animation: slideIn 0.4s ease both;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── TEXTAREA ── */
+    .answer-label {
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text3);
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      resize: vertical;
+      min-height: 140px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+      background: rgba(59,130,246,0.04);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    }
+
+    textarea::placeholder { color: var(--text3); }
+
+    /* ── STATS ROW ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--accent2);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-lbl {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text3);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── FEEDBACK ── */
+    .score-display {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .score-ring {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .score-ring::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      padding: 3px;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+
+    .score-high { background: rgba(34,197,94,0.12); color: var(--green); }
+    .score-high::before { background: conic-gradient(var(--green), transparent); }
+    .score-mid { background: rgba(245,158,11,0.12); color: var(--amber); }
+    .score-mid::before { background: conic-gradient(var(--amber), transparent); }
+    .score-low { background: rgba(239,68,68,0.12); color: var(--red); }
+    .score-low::before { background: conic-gradient(var(--red), transparent); }
+
+    .score-meta { flex: 1; }
+    .score-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .score-sub { font-size: 13px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+
+    .feedback-block {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    .feedback-block-title {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text3);
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .feedback-block-text {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.7;
+    }
+
+    .better-block {
+      background: rgba(59,130,246,0.05);
+      border: 1px solid rgba(59,130,246,0.15);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    .better-block .feedback-block-title { color: var(--accent2); }
+    .better-block .feedback-block-text { color: var(--text); }
+
+    /* ── CONTINUE PROMPT ── */
+    .continue-prompt {
+      text-align: center;
+      padding: 32px 20px;
+    }
+
+    .continue-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--green);
+      margin-bottom: 20px;
+    }
+
+    .continue-prompt h3 {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .continue-prompt p {
+      font-size: 14px;
+      color: var(--text3);
+      margin-bottom: 28px;
+    }
+
+    .continue-btns {
+      display: flex;
+      gap: 12px;
+    }
+
+    .continue-btns .btn { margin-top: 0; }
+
+    /* ── FINAL SCORE ── */
+    .final-wrap {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .final-score-ring {
+      width: 140px; height: 140px;
+      border-radius: 50%;
+      margin: 0 auto 24px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      position: relative;
+    }
+
+    .final-score-ring::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(var(--accent) calc(var(--pct) * 1%), var(--border) 0%);
+      padding: 4px;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+
+    .final-score-ring::after {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      border-radius: 50%;
+      background: var(--card);
+    }
+
+    .final-num {
+      font-size: 52px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #e2e8f0, #93c5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+      z-index: 1;
+      line-height: 1;
+    }
+
+    .final-denom {
+      font-size: 16px;
+      color: var(--text3);
+      font-family: 'JetBrains Mono', monospace;
+      position: relative;
+      z-index: 1;
+    }
+
+    .final-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .final-subtitle {
+      font-size: 14px;
+      color: var(--text3);
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    .final-badges {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .final-badge {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+      border: 1px solid;
+    }
+
+    /* ── CONFETTI ── */
+    .confetti-piece {
+      position: fixed;
+      width: 8px; height: 8px;
+      top: -20px;
+      border-radius: 2px;
+      animation: confettiFall linear both;
+      z-index: 200;
+      pointer-events: none;
+    }
+
+    @keyframes confettiFall {
+      0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ── UTILITIES ── */
+    .hidden { display: none !important; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+      50% { opacity: 0.7; box-shadow: 0 0 0 4px rgba(34,197,94,0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .anim-in { animation: fadeUp 0.5s ease both; }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<div class="ambient ambient-1"></div>
+<div class="ambient ambient-2"></div>
+
+<!-- CAR DRIFT LOADER -->
+<div class="loader-overlay" id="loader">
+  <div class="track">
+    <div class="smoke smoke-1">💨</div>
+    <div class="smoke smoke-2">💨</div>
+    <div class="smoke smoke-3">💨</div>
+    <div class="car">🏎️</div>
+    <div class="track-line"></div>
+  </div>
+  <div class="loader-text" id="loaderText">Analyzing your resume<span class="loader-dots"><span>.</span><span>.</span><span>.</span></span></div>
+  <div class="loader-subtext" id="loaderSub">AI is generating personalized questions</div>
+</div>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo-row">
+      <div class="logo-icon">🎯</div>
+      <h1>Interview Copilot</h1>
+    </div>
+    <p>AI-POWERED MOCK INTERVIEW SYSTEM</p>
+    <div class="status-bar">
+      <div class="status-dot"></div>
+      Powered by Groq LLaMA 3.3 
+    </div>
+  </div>
+
+  <!-- UPLOAD SECTION -->
+  <div class="card" id="uploadSection">
+    <div style="margin-bottom:24px;">
+      <div style="font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--text3);letter-spacing:0.06em;margin-bottom:6px;">STEP 01</div>
+      <div style="font-size:22px;font-weight:800;color:var(--text);">Upload Your Resume</div>
+      <div style="font-size:14px;color:var(--text3);margin-top:4px;">AI will analyze your skills and generate personalized interview questions</div>
+    </div>
+
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('resumeFile').click()"
+      ondragover="event.preventDefault();this.classList.add('dragover')"
+      ondragleave="this.classList.remove('dragover')"
+      ondrop="handleDrop(event)">
+      <div class="upload-icon-wrap">📄</div>
+      <h3>Drop your resume here</h3>
+      <p>PDF format · Click or drag & drop</p>
+      <input type="file" id="resumeFile" accept=".pdf" onchange="handleFile(this)"/>
+    </div>
+
+    <div class="file-selected" id="fileSelected">
+      <div class="file-selected-icon">✅</div>
+      <div>
+        <div class="file-selected-name" id="fileName">resume.pdf</div>
+        <div class="file-selected-size" id="fileSize">Ready to analyze</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="startBtn" onclick="startInterview()" disabled>
+      🚀 Start Interview
+    </button>
+  </div>
+
+  <!-- INTERVIEW SECTION -->
+  <div class="card hidden" id="interviewSection">
+
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card">
+        <div class="stat-val" id="statQ">1</div>
+        <div class="stat-lbl">QUESTION</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statAvg">—</div>
+        <div class="stat-lbl">AVG SCORE</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statLeft">10</div>
+        <div class="stat-lbl">REMAINING</div>
+      </div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-info">
+        <div class="progress-label">Progress — <span id="progressText">Q1 of 10</span></div>
+        <div class="progress-label"><span id="progressPct">0%</span></div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div class="progress-dots" id="progressDots"></div>
+    </div>
+
+    <div class="q-number" id="qNumber">QUESTION 01</div>
+    <div class="question-text" id="questionText">Loading your question...</div>
+
+    <div class="answer-label">YOUR ANSWER</div>
+    <textarea id="answerText" placeholder="Type your answer here. Be as detailed as you can — the AI evaluates clarity, depth, and technical accuracy..."></textarea>
+
+    <button class="btn btn-primary" id="submitBtn" onclick="submitAnswer()">
+      Submit Answer →
+    </button>
+  </div>
+
+  <!-- FEEDBACK SECTION -->
+  <div class="card hidden" id="feedbackSection">
+    <div style="font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--text3);letter-spacing:0.06em;margin-bottom:16px;">EVALUATION RESULT</div>
+
+    <div class="score-display" id="scoreDisplay"></div>
+
+    <div id="feedbackBlocks"></div>
+
+    <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()">
+      Next Question →
+    </button>
+  </div>
+
+  <!-- CONTINUE PROMPT -->
+  <div class="card hidden" id="continueSection">
+    <div class="continue-prompt">
+      <div class="continue-badge">
+        <span>✅</span> 10 Questions Completed
+      </div>
+      <h3>Round Complete!</h3>
+      <p>You've answered all 10 questions.<br/>Want to keep going or see your final score?</p>
+      <div class="continue-btns">
+        <button class="btn btn-secondary" onclick="endInterview()" style="margin-top:0;">
+          See Final Score
+        </button>
+        <button class="btn btn-primary" onclick="continueInterview()" style="margin-top:0;">
+          5 More Questions →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINAL SECTION -->
+  <div class="card hidden" id="finalSection">
+    <div class="final-wrap">
+      <div class="final-score-ring" id="finalRing">
+        <div class="final-num" id="finalNum">0</div>
+        <div class="final-denom">/ 10</div>
+      </div>
+      <div class="final-title" id="finalTitle">Interview Complete!</div>
+      <div class="final-subtitle" id="finalSub">Here's how you performed across all questions.</div>
+      <div class="final-badges" id="finalBadges"></div>
+      <button class="btn btn-primary" onclick="restart()" style="max-width:300px;margin:0 auto;">
+        🔄 Start New Interview
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let sessionId = null;
+  let currentQuestion = null;
+  let totalQuestions = 10;
+  let currentQNum = 0;
+  let scores = [];
+  let selectedFile = null;
+
+  // ── DRAG & DROP
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('uploadZone').classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') {
+      selectedFile = file;
+      showFileSelected(file);
+    }
+  }
+
+  function handleFile(input) {
+    selectedFile = input.files[0];
+    if (selectedFile) showFileSelected(selectedFile);
+  }
+
+  function showFileSelected(file) {
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB · PDF';
+    document.getElementById('fileSelected').classList.add('show');
+    document.getElementById('startBtn').disabled = false;
+  }
+
+  // ── LOADER
+  function showLoader(text, sub) {
+    document.getElementById('loaderText').innerHTML = text + '<span class="loader-dots"><span>.</span><span>.</span><span>.</span></span>';
+    document.getElementById('loaderSub').textContent = sub || '';
+    document.getElementById('loader').classList.add('show');
+  }
+
+  function hideLoader() {
+    document.getElementById('loader').classList.remove('show');
+  }
+
+  // ── START
+  async function startInterview() {
+    if (!selectedFile) return;
+    showLoader('Analyzing your resume', 'AI is generating personalized questions');
+    document.getElementById('startBtn').disabled = true;
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const res = await fetch('/upload-resume', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      sessionId = data.session_id;
+      currentQuestion = data.first_question;
+      totalQuestions = data.total_questions;
+      currentQNum = 1;
+      scores = [];
+
+      hideLoader();
+      document.getElementById('uploadSection').classList.add('hidden');
+      document.getElementById('interviewSection').classList.remove('hidden');
+      document.getElementById('interviewSection').classList.add('anim-in');
+
+      buildDots(totalQuestions);
+      updateUI();
+    } catch(e) {
+      hideLoader();
+      alert('Error uploading resume. Make sure the server is running and try again.');
+      document.getElementById('startBtn').disabled = false;
+    }
+  }
+
+  // ── DOTS
+  function buildDots(count) {
+    const wrap = document.getElementById('progressDots');
+    wrap.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const d = document.createElement('div');
+      d.className = 'pdot' + (i === 0 ? ' active' : '');
+      d.id = 'pdot-' + i;
+      wrap.appendChild(d);
+    }
+  }
+
+  function updateUI() {
+    document.getElementById('questionText').textContent = currentQuestion;
+    document.getElementById('qNumber').textContent = 'QUESTION ' + String(currentQNum).padStart(2,'0');
+    document.getElementById('answerText').value = '';
+    document.getElementById('statQ').textContent = currentQNum;
+    document.getElementById('statLeft').textContent = totalQuestions - currentQNum + 1;
+
+    const pct = Math.round((currentQNum - 1) / totalQuestions * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = 'Q' + currentQNum + ' of ' + totalQuestions;
+    document.getElementById('progressPct').textContent = pct + '%';
+  }
+
+  function updateAvgScore() {
+    if (scores.length === 0) return;
+    const avg = (scores.reduce((a,b) => a+b,0) / scores.length).toFixed(1);
+    document.getElementById('statAvg').textContent = avg;
+  }
+
+  // ── SUBMIT
+  async function submitAnswer() {
+    const answer = document.getElementById('answerText').value.trim();
+    if (!answer) { shakeElement('answerText'); return; }
+
+    showLoader('Evaluating your answer', 'AI is analyzing clarity, depth and accuracy');
+    document.getElementById('submitBtn').disabled = true;
+
+    try {
+      const res = await fetch('/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId, question: currentQuestion, answer })
+      });
+      const data = await res.json();
+
+      scores.push(data.score);
+      updateAvgScore();
+
+      const dot = document.getElementById('pdot-' + (currentQNum - 1));
+      if (dot) { dot.classList.remove('active'); dot.classList.add('done'); }
+
+      hideLoader();
+      showFeedback(data);
+    } catch(e) {
+      hideLoader();
+      alert('Error evaluating answer. Try again.');
+    }
+
+    document.getElementById('submitBtn').disabled = false;
+  }
+
+  // ── FEEDBACK
+  function showFeedback(data) {
+    const score = data.score;
+    const scoreClass = score >= 7 ? 'score-high' : score >= 4 ? 'score-mid' : 'score-low';
+    const scoreLabel = score >= 7 ? 'Excellent Answer' : score >= 4 ? 'Good Attempt' : 'Needs Work';
+    const scoreEmoji = score >= 7 ? '🔥' : score >= 4 ? '👍' : '💪';
+
+    document.getElementById('scoreDisplay').innerHTML = `
+      <div class="score-ring ${scoreClass}">${score}</div>
+      <div class="score-meta">
+        <div class="score-title">${scoreEmoji} ${scoreLabel}</div>
+        <div class="score-sub">Score: ${score}/10 · Question ${currentQNum}</div>
+      </div>
+    `;
+
+    document.getElementById('feedbackBlocks').innerHTML = `
+      <div class="feedback-block">
+        <div class="feedback-block-title">💬 FEEDBACK</div>
+        <div class="feedback-block-text">${data.feedback || 'Good effort on this answer.'}</div>
+      </div>
+      <div class="better-block">
+        <div class="feedback-block-title">💡 BETTER ANSWER</div>
+        <div class="feedback-block-text">${data.better_answer || 'Focus on being more specific and structured.'}</div>
+      </div>
+    `;
+
+    if (data.ask_continue) {
+      document.getElementById('nextBtn').textContent = 'See Round Results →';
+      document.getElementById('nextBtn').onclick = showContinuePrompt;
+    } else if (data.is_complete) {
+      document.getElementById('nextBtn').textContent = 'See Final Score 🏆';
+      document.getElementById('nextBtn').onclick = () => showFinal(data.final_score);
+    } else {
+      document.getElementById('nextBtn').textContent = 'Next Question →';
+      document.getElementById('nextBtn').onclick = nextQuestion;
+      currentQuestion = data.next_question;
+      currentQNum++;
+      const nextDot = document.getElementById('pdot-' + (currentQNum - 1));
+      if (nextDot) nextDot.classList.add('active');
+    }
+
+    document.getElementById('interviewSection').classList.add('hidden');
+    document.getElementById('feedbackSection').classList.remove('hidden');
+    document.getElementById('feedbackSection').classList.add('anim-in');
+  }
+
+  // ── NEXT QUESTION
+  function nextQuestion() {
+    document.getElementById('feedbackSection').classList.add('hidden');
+    document.getElementById('interviewSection').classList.remove('hidden');
+    updateUI();
+  }
+
+  // ── CONTINUE PROMPT
+  function showContinuePrompt() {
+    document.getElementById('feedbackSection').classList.add('hidden');
+    document.getElementById('continueSection').classList.remove('hidden');
+    document.getElementById('continueSection').classList.add('anim-in');
+  }
+
+  async function continueInterview() {
+    showLoader('Generating more questions', 'Building 5 new personalized questions');
+    document.getElementById('continueSection').classList.add('hidden');
+
+    try {
+      const res = await fetch('/continue-interview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId })
+      });
+      const data = await res.json();
+
+      currentQuestion = data.next_question;
+      currentQNum++;
+      totalQuestions = data.total_questions;
+
+      // add more dots
+      const wrap = document.getElementById('progressDots');
+      for (let i = wrap.children.length; i < totalQuestions; i++) {
+        const d = document.createElement('div');
+        d.className = 'pdot';
+        d.id = 'pdot-' + i;
+        wrap.appendChild(d);
+      }
+      const activeDot = document.getElementById('pdot-' + (currentQNum - 1));
+      if (activeDot) activeDot.classList.add('active');
+
+      hideLoader();
+      document.getElementById('interviewSection').classList.remove('hidden');
+      updateUI();
+    } catch(e) {
+      hideLoader();
+      alert('Error loading more questions.');
+    }
+  }
+
+  function endInterview() {
+    const avg = scores.length ? parseFloat((scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1)) : 0;
+    document.getElementById('continueSection').classList.add('hidden');
+    showFinal(avg);
+  }
+
+  // ── FINAL
+  function showFinal(score) {
+    score = parseFloat(score) || 0;
+    document.getElementById('feedbackSection').classList.add('hidden');
+    document.getElementById('interviewSection').classList.add('hidden');
+
+    const pct = score * 10;
+    document.getElementById('finalRing').style.setProperty('--pct', pct);
+    document.getElementById('finalNum').textContent = score;
+
+    const title = score >= 8 ? '🏆 Outstanding!' : score >= 6 ? '🎉 Well Done!' : score >= 4 ? '💪 Keep Practicing' : '📚 More Study Needed';
+    const sub = score >= 8
+      ? "You're interview ready! Your answers showed strong technical knowledge."
+      : score >= 6
+      ? "Good performance! A bit more practice will get you to the top."
+      : score >= 4
+      ? "You have the foundation. Focus on the feedback and practice more."
+      : "Review the fundamentals and practice answering out loud daily.";
+
+    document.getElementById('finalTitle').textContent = title;
+    document.getElementById('finalSub').textContent = sub;
+
+    const badges = [];
+    if (scores.length >= 10) badges.push({ text: score >= 7 ? '🔥 Strong Performance' : '✅ Interview Completed', color: 'var(--green)', bg: 'rgba(34,197,94,0.1)' });
+    if (scores.filter(s => s >= 7).length >= 5) badges.push({ text: '⭐ 5+ High Scores', color: 'var(--amber)', bg: 'rgba(245,158,11,0.1)' });
+    badges.push({ text: `📊 ${scores.length} Questions Answered`, color: 'var(--accent2)', bg: 'rgba(59,130,246,0.1)' });
+
+    document.getElementById('finalBadges').innerHTML = badges.map(b =>
+      `<div class="final-badge" style="color:${b.color};background:${b.bg};border-color:${b.color}30;">${b.text}</div>`
+    ).join('');
+
+    document.getElementById('finalSection').classList.remove('hidden');
+    document.getElementById('finalSection').classList.add('anim-in');
+
+    if (score >= 7) launchConfetti();
+  }
+
+  // ── CONFETTI
+  function launchConfetti() {
+    const colors = ['#3b82f6','#60a5fa','#22c55e','#f59e0b','#a78bfa','#f472b6'];
+    for (let i = 0; i < 60; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.cssText = `
+        left: ${Math.random() * 100}vw;
+        background: ${colors[Math.floor(Math.random() * colors.length)]};
+        animation-duration: ${2 + Math.random() * 2}s;
+        animation-delay: ${Math.random() * 1.5}s;
+        transform: rotate(${Math.random() * 360}deg);
+        border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+      `;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 5000);
+    }
+  }
+
+  // ── SHAKE
+  function shakeElement(id) {
+    const el = document.getElementById(id);
+    el.style.animation = 'none';
+    el.style.border = '1px solid var(--red)';
+    el.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.15)';
+    setTimeout(() => {
+      el.style.border = '';
+      el.style.boxShadow = '';
+    }, 1500);
+  }
+
+  // ── RESTART
+  function restart() { location.reload(); }
+</script>
+</body>
+</html>
