@@ -1,21 +1,12 @@
-# Environment variables
-.env
-
-# Virtual environment
 venv/
-.venv/
-
-# Python cache
+.env
 __pycache__/
 *.pyc
 *.pyo
-
-# VS Code
-.vscode/
-
-# Logs
-*.log
-
-# OS files
+temp_*.pdf
 .DS_Store
-Thumbs.db
+*.egg-info/
+dist/
+build/
+*.log
+ 
