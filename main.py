@@ -6,6 +6,7 @@ from resume_parser import parse_resume
 from interview_engine import generate_questions, evaluate_answer
 import shutil
 import os
+from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 
@@ -118,4 +119,7 @@ async def continue_interview(req: ContinueRequest):
         "total_questions": len(session["questions"])
     }
 
-app.mount("/", StaticFiles(directory=".", html=True))
+@app.get("/")
+async def serve_frontend():
+    with open("index.html", "r") as f:
+        return HTMLResponse(content=f.read())
