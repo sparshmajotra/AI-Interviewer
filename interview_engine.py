@@ -16,7 +16,7 @@ def generate_questions(resume_text: str) -> list:
     """
     
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-120b",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=500
     )
@@ -47,7 +47,7 @@ def evaluate_answer(
     """
     
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-120b",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=400
     )
